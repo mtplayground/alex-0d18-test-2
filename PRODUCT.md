@@ -22,6 +22,7 @@
 - `src/hooks/useHourFormat.ts` owns localStorage read/write behavior and guards against unavailable storage.
 - `src/lib/formatTime.ts` is the pure time-formatting boundary shared by UI and tests.
 - `src/lib/getHandAngles.ts` is a pure analog-clock helper returning hour, minute, and second hand rotation degrees from a `Date`.
+- `src/lib/weather.ts` contains a typed OpenWeatherMap Current Weather API client that normalizes city, temperature, description, and feels-like data and reports typed error cases.
 - Tailwind is configured through `tailwind.config.js`, `postcss.config.js`, and `src/index.css`.
 - `vite.config.ts` keeps dev and preview servers on `0.0.0.0:8080`; preview allows `.sprites.app` hosts for Sprite deployments.
 - Playwright E2E configuration lives in `playwright.config.ts`, with specs under `e2e/`.
@@ -31,6 +32,7 @@
 - `npm run test` runs Vitest tests under `src`.
 - `src/lib/formatTime.test.ts` covers formatting boundaries.
 - `src/lib/getHandAngles.test.ts` covers midnight/noon, exact hand positions, smooth hour and minute movement, and late-night wrap boundaries.
+- `src/lib/weather.test.ts` covers weather response normalization, URL construction, blank keys, network failures, invalid keys, rate limits, and malformed responses with mocked `fetch`.
 - `src/hooks/useHourFormat.test.ts` covers default, read, write, and toggle persistence behavior with mocked localStorage.
 - `npm run test:e2e` builds the production bundle, serves `dist/` with Vite preview, and runs Playwright Chromium tests for digital clock toggling/persistence plus analog SVG rendering and second-hand rotation.
 
@@ -41,4 +43,5 @@
 - `npm run serve` serves the built `dist/` directory on `0.0.0.0:8080`.
 - `npm run preview` is an alias for `npm run serve`.
 - `.env.example` is intentionally empty; no environment variables are required right now.
+- Weather API keys are not hardcoded; callers pass the OpenWeatherMap API key into `fetchWeather`.
 - Generated and local-only files stay out of version control, including `node_modules/`, `dist/`, Playwright output, tokens, and local progress metadata.
