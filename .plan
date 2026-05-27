@@ -1,28 +1,36 @@
 Architecture plan
 
 Project shape:
-- Vite + React + TypeScript single-page app.
-- Runtime code lives under `src/`, with the browser entry and top-level app composition in `src/main.tsx`.
-- Static production output is generated into `dist/` by `npm run build`, which runs `tsc -b` before `vite build`.
-- Existing verification surfaces are Vitest unit tests under `src/**/*.test.ts(x)` and Playwright browser tests under `e2e/`.
+- Vite + React + TypeScript single-page clock app.
+- Runtime code lives under `src/`, with React composition in `src/main.tsx`.
+- Shared deterministic date/time helpers live under `src/lib/` and are covered by Vitest.
+- Browser integration coverage lives under `e2e/` and runs against the production preview path.
 
 Module structure and file organization:
 - `src/main.tsx`: app composition and React root mounting.
 - `src/components/Clock.tsx`: ticking clock UI and interval lifecycle.
-- `src/components/FormatToggle.tsx`: controlled hour-format switch.
-- `src/hooks/useHourFormat.ts`: persisted 12h/24h preference.
-- `src/lib/formatTime.ts`: pure time formatting logic shared by UI and tests.
-- `vite.config.ts`: shared dev and preview host/port configuration.
-- `playwright.config.ts`: browser test configuration; Issue #23 may need a production preview command path instead of the dev server for build verification.
-- `README.md`: operational commands, including the static serve command required by Issue #23.
+- `src/components/FormatToggle.tsx`: controlled 12h/24h toggle.
+- `src/hooks/useHourFormat.ts`: persisted hour-format preference.
+- `src/lib/formatTime.ts`: pure string formatting helper.
+- `src/lib/getHandAngles.ts`: planned pure helper for Issue #25, returning `{ hour, minute, second }` rotation degrees for an analog clock face.
+- `src/lib/getHandAngles.test.ts`: planned Vitest coverage for exact hand-angle boundaries and smooth movement.
+- `vite.config.ts`: dev and preview server configuration on `0.0.0.0:8080`, with `.sprites.app` allowed for deployed preview serving.
+
+Shared types and contracts:
+- `getHandAngles(date: Date): { hour: number; minute: number; second: number }`.
+- Angles are degrees clockwise from 12 o'clock.
+- Second hand: `seconds * 6`.
+- Minute hand: `(minutes + seconds / 60) * 6`, so it moves smoothly as seconds pass.
+- Hour hand: `(hours % 12 + minutes / 60) * 30`, so it moves smoothly as minutes pass.
+- Keep the helper independent of React, DOM APIs, timers, and localStorage.
 
 Issue dependencies:
-- Remaining implementation scope is Issue #23: Production build verification.
-- Issue #23 depends on Issue 3.3 per the GitHub issue. The current repository already has a Vite app, build script, preview script, unit tests, and E2E scaffolding, so #23 should focus on validating the final production artifact rather than changing app architecture.
+- Current implementation scope is only Issue #25: Implement hand-angle calculation helper.
+- No database, server, routing, deployment, or UI changes are required for this issue.
+- Issue #25 can be implemented independently of the existing digital clock UI; future analog-clock UI work can consume the helper later.
 
 Key design decisions:
-- Treat `npm run build` as the canonical production build command.
-- Verify a clean `dist/` by removing old output before building, then confirming Vite recreates the expected static assets.
-- Prefer `npm run preview` for serving the built app because it uses Vite's production preview server and existing host/port configuration.
-- Document the exact build-and-serve workflow in `README.md` so production verification is reproducible.
-- Keep any new production-build check narrowly scoped to build output and static serving; do not duplicate unit-level clock behavior already covered by Vitest and Playwright.
+- Add a small pure helper rather than expanding `formatTime.ts`; angle calculation is a distinct domain from string formatting.
+- Use local `Date` accessors, matching the existing clock display behavior.
+- Return raw numeric degrees without rounding so downstream UI can decide formatting or transform precision.
+- Cover midnight/noon, quarter-hour positions, and smooth minute/hour movement in unit tests.
