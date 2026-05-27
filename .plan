@@ -1,22 +1,37 @@
 Architecture plan
 
-Issue #1: Initialize Vite + React + TypeScript project
+Project shape:
+- Vite + React + TypeScript single-page app.
+- Keep the browser entry in `src/main.tsx`; extract the root UI to `src/App.tsx` when the first feature issue touches app layout.
+- Use Tailwind for styling once issue #3 lands, with global Tailwind directives and base page styles in `src/index.css`.
 
-Module structure and file organization:
-- Create a standard Vite React TypeScript app at the repository root.
-- Keep the browser entry in `src/main.tsx`, mounting a root `App` component from `src/App.tsx`.
-- Keep global styles in `src/index.css` and component-level styles in `src/App.css` if the initial template needs them.
-- Use `index.html` as the single Vite HTML entry point.
-- Keep build and compiler configuration at the root: `package.json`, `vite.config.ts`, `tsconfig.json`, `tsconfig.app.json`, and `tsconfig.node.json`.
+Module structure:
+- `src/App.tsx`: top-level layout, owns composition of the clock and format toggle.
+- `src/components/Clock.tsx`: renders current time, owns the ticking `Date` state and interval cleanup.
+- `src/components/FormatToggle.tsx`: accessible 12h/24h switch controlled by props.
+- `src/hooks/useHourFormat.ts`: returns `[hour12, setHour12]`, initializes from localStorage, persists changes, and tolerates unavailable storage.
+- `src/lib/formatTime.ts`: pure formatting helper shared by `Clock` and unit tests.
+- `src/test/` or colocated `*.test.ts(x)`: Vitest tests for pure helpers and hooks.
+- `playwright.config.ts` and `e2e/clock.spec.ts`: browser coverage for clock rendering, toggle behavior, and persistence.
 
-Shared types:
-- No shared domain types are needed for the initial skeleton.
-- If later issues add application state or API boundaries, introduce shared types under `src/types/` or colocate small component-specific types with their component.
+Shared types and contracts:
+- Use `boolean` for the hour format state: `false` means 24-hour time, `true` means 12-hour time.
+- `formatTime(date: Date, hour12: boolean): string` is the stable formatting boundary.
+- In 24h mode return zero-padded `HH:MM:SS`.
+- In 12h mode return zero-padded `HH:MM:SS AM|PM`, converting midnight to `12` and noon to `12`.
 
-Dependencies between issues:
-- Issue #1 is the foundation for all future frontend work. Later issues should build on the Vite project layout, package scripts, and TypeScript config created here.
+Issue dependencies:
+- #3 and #4 can be implemented independently after the existing Vite setup.
+- #6 should land before #5 is finalized so `Clock` can rely on the shared formatter instead of duplicating time logic.
+- #7 depends on #6 and introduces Vitest coverage for the formatter.
+- #8 can be developed independently, but #11 should wait until hook test utilities and storage mocks are in place.
+- #9 can be developed independently as a controlled UI component.
+- #10 depends on #5, #8, and #9: `App` owns `useHourFormat`, passes the mode to `Clock`, and passes state/control props to `FormatToggle`.
+- #12 should come last, after the integrated UI exists and Playwright can assert the real app behavior.
 
 Key design decisions:
-- Use Vite's React TypeScript conventions to minimize custom setup and keep future maintenance predictable.
-- Keep the initial app minimal, with only the files needed to run, typecheck, and build.
-- Prefer root-level npm scripts for development, build, lint/typecheck if configured, and preview.
+- Keep formatting pure and deterministic so boundary cases are simple to test.
+- Keep persistence inside the hook, not the UI components, so `Clock` and `FormatToggle` remain reusable.
+- Use controlled component props for `FormatToggle` to keep one source of truth in `App`.
+- Guard all direct `localStorage` access with `try/catch` and `typeof window` checks to keep tests and non-browser execution stable.
+- Prefer focused tests: unit tests for exact formatting and hook persistence, E2E for user-visible integration and reload persistence.
