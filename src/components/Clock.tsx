@@ -1,9 +1,13 @@
 import { useEffect, useState } from 'react';
 import { formatTime } from '../lib/formatTime';
 
-export function Clock() {
+type ClockProps = {
+  hour12: boolean;
+};
+
+export function Clock({ hour12 }: ClockProps) {
   const [now, setNow] = useState(() => new Date());
-  const displayTime = formatTime(now, false);
+  const displayTime = formatTime(now, hour12);
 
   useEffect(() => {
     const intervalId = window.setInterval(() => {
@@ -17,7 +21,7 @@ export function Clock() {
 
   return (
     <time
-      className="block font-mono text-6xl font-semibold tabular-nums tracking-normal text-white sm:text-8xl"
+      className="block whitespace-nowrap font-mono text-4xl font-semibold tabular-nums tracking-normal text-white sm:text-6xl md:text-8xl"
       dateTime={now.toISOString()}
       aria-label={`Current time ${displayTime}`}
     >
