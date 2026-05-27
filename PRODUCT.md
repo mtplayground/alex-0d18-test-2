@@ -20,6 +20,7 @@
 - `src/hooks/useHourFormat.ts` owns localStorage read/write behavior and guards against unavailable storage.
 - `src/lib/formatTime.ts` is the pure time-formatting boundary shared by UI and tests.
 - Tailwind is configured through `tailwind.config.js`, `postcss.config.js`, and `src/index.css`.
+- `vite.config.ts` keeps dev and preview servers on `0.0.0.0:8080`; preview allows `.sprites.app` hosts for Sprite deployments.
 - Playwright E2E configuration lives in `playwright.config.ts`, with specs under `e2e/`.
 
 ## Testing
