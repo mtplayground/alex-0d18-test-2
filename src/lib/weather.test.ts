@@ -46,6 +46,7 @@ describe('fetchWeather', () => {
     expect(url.searchParams.get('lon')).toBe('-0.1276');
     expect(url.searchParams.get('appid')).toBe('test-api-key');
     expect(url.searchParams.get('units')).toBe('metric');
+    expect(fetchMock).toHaveBeenCalledTimes(1);
   });
 
   it('rejects blank API keys before making a request', async () => {
@@ -59,30 +60,39 @@ describe('fetchWeather', () => {
   });
 
   it('wraps network failures in a weather API error', async () => {
-    vi.stubGlobal('fetch', vi.fn().mockRejectedValue(new TypeError('Failed to fetch')));
+    const fetchMock = vi.fn().mockRejectedValue(new TypeError('Failed to fetch'));
+    vi.stubGlobal('fetch', fetchMock);
+    const request = fetchWeather(10, 20, 'test-api-key');
 
-    await expect(fetchWeather(10, 20, 'test-api-key')).rejects.toBeInstanceOf(WeatherApiError);
-    await expect(fetchWeather(10, 20, 'test-api-key')).rejects.toMatchObject({
+    await expect(request).rejects.toBeInstanceOf(WeatherApiError);
+    await expect(request).rejects.toMatchObject({
       code: 'network_error',
     });
+    expect(fetchMock).toHaveBeenCalledTimes(1);
   });
 
   it('reports invalid API keys', async () => {
-    mockFetch(new Response('Unauthorized', { status: 401 }));
+    const fetchMock = mockFetch(new Response('Unauthorized', { status: 401 }));
+    const request = fetchWeather(10, 20, 'bad-api-key');
 
-    await expect(fetchWeather(10, 20, 'bad-api-key')).rejects.toMatchObject({
+    await expect(request).rejects.toBeInstanceOf(WeatherApiError);
+    await expect(request).rejects.toMatchObject({
       code: 'invalid_api_key',
       status: 401,
     });
+    expect(fetchMock).toHaveBeenCalledTimes(1);
   });
 
   it('reports rate limits', async () => {
-    mockFetch(new Response('Too Many Requests', { status: 429 }));
+    const fetchMock = mockFetch(new Response('Too Many Requests', { status: 429 }));
+    const request = fetchWeather(10, 20, 'test-api-key');
 
-    await expect(fetchWeather(10, 20, 'test-api-key')).rejects.toMatchObject({
+    await expect(request).rejects.toBeInstanceOf(WeatherApiError);
+    await expect(request).rejects.toMatchObject({
       code: 'rate_limited',
       status: 429,
     });
+    expect(fetchMock).toHaveBeenCalledTimes(1);
   });
 
   it('reports malformed successful responses', async () => {
