@@ -2,19 +2,20 @@ Architecture plan
 
 Project shape:
 - Vite + React + TypeScript single-page clock app.
-- Runtime code lives under `src/`, with React composition in `src/main.tsx`.
+- Runtime code lives under `src/`, with React composition currently in `src/main.tsx`.
 - Shared deterministic date/time helpers live under `src/lib/` and are covered by Vitest.
 - Browser integration coverage lives under `e2e/` and runs against the production preview path.
 
 Module structure and file organization:
-- `src/main.tsx`: app composition and React root mounting.
-- `src/components/Clock.tsx`: ticking clock UI and interval lifecycle.
+- `src/main.tsx`: current app composition and React root mounting. Issue #29 should lift the ticking `Date` state here so the analog and digital clocks share the same timestamp.
+- `src/components/Clock.tsx`: digital clock display. Today it owns its own interval; Issue #29 should adjust it to render from the shared date state instead of ticking independently.
 - `src/components/FormatToggle.tsx`: controlled 12h/24h toggle.
+- `src/components/AnalogClock.tsx`: planned SVG component for Issue #28. It should render the circular dial, 60 tick marks, Roman outer numerals, Arabic inner numerals, and three rotated line hands.
 - `src/hooks/useHourFormat.ts`: persisted hour-format preference.
 - `src/lib/formatTime.ts`: pure string formatting helper.
-- `src/lib/getHandAngles.ts`: planned pure helper for Issue #25, returning `{ hour, minute, second }` rotation degrees for an analog clock face.
-- `src/lib/getHandAngles.test.ts`: planned Vitest coverage for exact hand-angle boundaries and smooth movement.
-- `vite.config.ts`: dev and preview server configuration on `0.0.0.0:8080`, with `.sprites.app` allowed for deployed preview serving.
+- `src/lib/getHandAngles.ts`: pure analog-clock helper returning `{ hour, minute, second }` degrees.
+- `src/lib/getHandAngles.test.ts`: existing tests, to be expanded by Issue #27 with the requested edge and interpolation cases.
+- `e2e/clock.spec.ts`: existing Playwright coverage, to be extended by Issue #30 after analog integration.
 
 Shared types and contracts:
 - `getHandAngles(date: Date): { hour: number; minute: number; second: number }`.
@@ -22,15 +23,18 @@ Shared types and contracts:
 - Second hand: `seconds * 6`.
 - Minute hand: `(minutes + seconds / 60) * 6`, so it moves smoothly as seconds pass.
 - Hour hand: `(hours % 12 + minutes / 60) * 30`, so it moves smoothly as minutes pass.
-- Keep the helper independent of React, DOM APIs, timers, and localStorage.
+- `AnalogClock` should receive a `date: Date` prop and derive hand angles via `getHandAngles`; it should not own timers or persistence.
+- The integrated app should maintain one per-second `Date` state shared by `AnalogClock` and `Clock`.
 
 Issue dependencies:
-- Current implementation scope is only Issue #25: Implement hand-angle calculation helper.
-- No database, server, routing, deployment, or UI changes are required for this issue.
-- Issue #25 can be implemented independently of the existing digital clock UI; future analog-clock UI work can consume the helper later.
+- #27 depends on the existing hand-angle helper and can be implemented first by expanding `src/lib/getHandAngles.test.ts`.
+- #28 depends on the helper and base styling; implement `AnalogClock` as a reusable controlled visual component.
+- #29 depends on #28 and the existing wired digital clock/toggle layout; it integrates `AnalogClock` and lifts the ticking date state.
+- #30 depends on #29; update Playwright only after the analog SVG is visible in the real app.
 
 Key design decisions:
-- Add a small pure helper rather than expanding `formatTime.ts`; angle calculation is a distinct domain from string formatting.
-- Use local `Date` accessors, matching the existing clock display behavior.
-- Return raw numeric degrees without rounding so downstream UI can decide formatting or transform precision.
-- Cover midnight/noon, quarter-hour positions, and smooth minute/hour movement in unit tests.
+- Keep angle calculation pure and independent of React, DOM APIs, timers, and localStorage.
+- Keep `AnalogClock` presentational and driven by props so tests and future layouts can reuse it.
+- Prefer SVG elements with accessible labels/testable structure over canvas so E2E can assert circles, hands, and numerals directly.
+- Use CSS transforms with `transform-origin: center` for hand rotation, with stable hand identifiers/classes for Playwright assertions.
+- Preserve the current dark theme and responsive centered layout; avoid introducing new state beyond the single shared `Date`.
