@@ -2,11 +2,12 @@
 
 ## Project
 
-`alex-0d18-test-2` is a Vite + React + TypeScript clock app. It displays the user's local time on a dark full-screen interface and lets the user switch between 24-hour and 12-hour formats.
+`alex-0d18-test-2` is a Vite + React + TypeScript clock app. It displays the user's local time with analog and digital clock faces on a dark full-screen interface, and lets the user switch the digital time between 24-hour and 12-hour formats.
 
 ## Current Behavior
 
 - Renders a centered live clock that updates once per second.
+- Shows an SVG analog clock face above the digital display, with Roman and Arabic numeral rings, minute tick marks, and rotating hour/minute/second hands.
 - Displays time as zero-padded `HH:MM:SS` in 24-hour mode.
 - Displays time as zero-padded `HH:MM:SS AM|PM` in 12-hour mode.
 - Provides an accessible Tailwind-styled `FormatToggle` button with `aria-pressed` and mode-specific labels.
@@ -14,8 +15,9 @@
 
 ## Architecture
 
-- `src/main.tsx` owns app composition: `useHourFormat`, `Clock`, and `FormatToggle`.
-- `src/components/Clock.tsx` owns current `Date` state and interval cleanup.
+- `src/main.tsx` owns app composition, the single per-second `Date` state, interval cleanup, `useHourFormat`, `AnalogClock`, `Clock`, and `FormatToggle`.
+- `src/components/AnalogClock.tsx` is a presentational SVG component driven by a `date` prop and `getHandAngles`.
+- `src/components/Clock.tsx` renders the digital time from the shared `date` prop.
 - `src/components/FormatToggle.tsx` is a controlled UI component.
 - `src/hooks/useHourFormat.ts` owns localStorage read/write behavior and guards against unavailable storage.
 - `src/lib/formatTime.ts` is the pure time-formatting boundary shared by UI and tests.
@@ -30,7 +32,7 @@
 - `src/lib/formatTime.test.ts` covers formatting boundaries.
 - `src/lib/getHandAngles.test.ts` covers midnight/noon, exact hand positions, smooth hour and minute movement, and late-night wrap boundaries.
 - `src/hooks/useHourFormat.test.ts` covers default, read, write, and toggle persistence behavior with mocked localStorage.
-- `npm run test:e2e` builds the production bundle, serves `dist/` with Vite preview, and runs the Playwright Chromium test for clock rendering, toggle switching, and reload persistence.
+- `npm run test:e2e` builds the production bundle, serves `dist/` with Vite preview, and runs Playwright Chromium tests for digital clock toggling/persistence plus analog SVG rendering and second-hand rotation.
 
 ## Conventions
 
