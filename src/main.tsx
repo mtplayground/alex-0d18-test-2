@@ -1,17 +1,18 @@
 import { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
+import { Clock } from './components/Clock';
 import './index.css';
 
 function App() {
   return (
     <main className="grid min-h-screen place-items-center bg-slate-950 px-6 py-12 text-slate-50">
-      <section className="w-full max-w-2xl">
+      <section className="w-full max-w-3xl text-center">
         <p className="mb-3 text-sm font-bold uppercase tracking-wide text-cyan-300">
-          Vite + React + TypeScript
+          Local time
         </p>
-        <h1 className="text-5xl font-bold leading-none text-white sm:text-7xl">alex-0d18-test-2</h1>
-        <p className="mt-5 max-w-xl text-lg leading-8 text-slate-300">
-          A minimal application skeleton ready for the next feature.
+        <Clock />
+        <p className="mx-auto mt-5 max-w-xl text-lg leading-8 text-slate-300">
+          Updated every second.
         </p>
       </section>
     </main>
