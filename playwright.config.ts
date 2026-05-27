@@ -9,7 +9,7 @@ export default defineConfig({
     trace: 'on-first-retry',
   },
   webServer: {
-    command: 'npm run build && npm run serve -- --strictPort',
+    command: 'VITE_OPENWEATHERMAP_API_KEY=e2e-test-key npm run build && npm run serve -- --strictPort',
     url: 'http://127.0.0.1:8080',
     reuseExistingServer: !process.env.CI,
     timeout: 120_000,
