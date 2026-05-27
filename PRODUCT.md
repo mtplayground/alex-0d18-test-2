@@ -2,7 +2,7 @@
 
 ## Project
 
-`alex-0d18-test-2` is a Vite + React + TypeScript clock app. It displays the user's local time with analog and digital clock faces on a dark full-screen interface, and lets the user switch the digital time between 24-hour and 12-hour formats.
+`alex-0d18-test-2` is a Vite + React + TypeScript clock app. It displays the user's local time with analog and digital clock faces on a dark full-screen interface, lets the user switch the digital time between 24-hour and 12-hour formats, and can show current weather when an OpenWeatherMap API key is configured.
 
 ## Current Behavior
 
@@ -12,14 +12,18 @@
 - Displays time as zero-padded `HH:MM:SS AM|PM` in 12-hour mode.
 - Provides an accessible Tailwind-styled `FormatToggle` button with `aria-pressed` and mode-specific labels.
 - Persists the selected hour format in `localStorage` under the `hour12` key, defaulting to 24-hour mode when no value exists.
+- Conditionally renders a compact weather panel below the digital clock when `VITE_OPENWEATHERMAP_API_KEY` is set.
+- Weather uses browser geolocation when available, falls back to London when denied or unavailable, refreshes every 10 minutes, and displays loading/error states plus city, temperature, description, and feels-like temperature.
 
 ## Architecture
 
-- `src/main.tsx` owns app composition, the single per-second `Date` state, interval cleanup, `useHourFormat`, `AnalogClock`, `Clock`, and `FormatToggle`.
+- `src/main.tsx` owns app composition, the single per-second `Date` state, interval cleanup, `useHourFormat`, `useWeather`, and conditional weather panel rendering.
 - `src/components/AnalogClock.tsx` is a presentational SVG component driven by a `date` prop and `getHandAngles`.
 - `src/components/Clock.tsx` renders the digital time from the shared `date` prop.
 - `src/components/FormatToggle.tsx` is a controlled UI component.
+- `src/components/WeatherPanel.tsx` is a presentational weather component for loading, error, empty, and current-weather states.
 - `src/hooks/useHourFormat.ts` owns localStorage read/write behavior and guards against unavailable storage.
+- `src/hooks/useWeather.ts` owns geolocation, London fallback, OpenWeatherMap fetching, refresh cadence, and weather state.
 - `src/lib/formatTime.ts` is the pure time-formatting boundary shared by UI and tests.
 - `src/lib/getHandAngles.ts` is a pure analog-clock helper returning hour, minute, and second hand rotation degrees from a `Date`.
 - `src/lib/weather.ts` contains a typed OpenWeatherMap Current Weather API client that normalizes city, temperature, description, and feels-like data and reports typed error cases.
@@ -34,7 +38,9 @@
 - `src/lib/getHandAngles.test.ts` covers midnight/noon, exact hand positions, smooth hour and minute movement, and late-night wrap boundaries.
 - `src/lib/weather.test.ts` covers weather response normalization, URL construction, blank keys, network failures, invalid keys, rate limits, and malformed responses with mocked `fetch`.
 - `src/hooks/useHourFormat.test.ts` covers default, read, write, and toggle persistence behavior with mocked localStorage.
-- `npm run test:e2e` builds the production bundle, serves `dist/` with Vite preview, and runs Playwright Chromium tests for digital clock toggling/persistence plus analog SVG rendering and second-hand rotation.
+- `src/hooks/useWeather.test.ts` covers geolocation success, denied-location fallback, 10-minute refreshes, weather errors, and missing API keys.
+- `src/components/WeatherPanel.test.tsx` covers weather details, loading, error, and empty states.
+- `npm run test:e2e` builds the production bundle with a test weather API key, serves `dist/` with Vite preview, and runs Playwright Chromium tests for digital clock toggling/persistence, analog SVG rendering and second-hand rotation, and weather panel rendering with mocked OpenWeatherMap data.
 
 ## Conventions
 
@@ -42,6 +48,6 @@
 - `npm run build` removes any existing `dist/`, runs TypeScript build checks, and creates a fresh Vite production bundle.
 - `npm run serve` serves the built `dist/` directory on `0.0.0.0:8080`.
 - `npm run preview` is an alias for `npm run serve`.
-- `.env.example` is intentionally empty; no environment variables are required right now.
-- Weather API keys are not hardcoded; callers pass the OpenWeatherMap API key into `fetchWeather`.
+- `.env.example` documents optional `VITE_OPENWEATHERMAP_API_KEY`; without it the weather panel is hidden.
+- Weather API keys are not hardcoded; the app reads the Vite environment variable and lower-level weather helpers receive the key as an argument.
 - Generated and local-only files stay out of version control, including `node_modules/`, `dist/`, Playwright output, tokens, and local progress metadata.
