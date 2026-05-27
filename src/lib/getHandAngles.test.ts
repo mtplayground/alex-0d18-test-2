@@ -22,11 +22,19 @@ describe('getHandAngles', () => {
     });
   });
 
-  it('calculates exact hour, minute, and second positions', () => {
-    expect(getHandAngles(localDate(3, 30, 15))).toEqual({
-      hour: 105,
-      minute: 181.5,
-      second: 90,
+  it('calculates quarter-past positions', () => {
+    expect(getHandAngles(localDate(12, 15, 0))).toEqual({
+      hour: 7.5,
+      minute: 90,
+      second: 0,
+    });
+  });
+
+  it('calculates half-past positions', () => {
+    expect(getHandAngles(localDate(6, 30, 0))).toEqual({
+      hour: 195,
+      minute: 180,
+      second: 0,
     });
   });
 
@@ -37,6 +45,22 @@ describe('getHandAngles', () => {
 
   it('moves the minute hand smoothly with seconds', () => {
     expect(getHandAngles(localDate(6, 10, 30)).minute).toBe(63);
+  });
+
+  it('interpolates both hour and minute hands between ticks', () => {
+    const angles = getHandAngles(localDate(3, 30, 15));
+
+    expect(angles.hour).toBe(105);
+    expect(angles.minute).toBe(181.5);
+    expect(angles.second).toBe(90);
+  });
+
+  it('handles the last second before 1 PM', () => {
+    const angles = getHandAngles(localDate(12, 59, 59));
+
+    expect(angles.hour).toBeCloseTo(29.5);
+    expect(angles.minute).toBeCloseTo(359.9);
+    expect(angles.second).toBe(354);
   });
 
   it('keeps late-night angles below a full rotation', () => {
