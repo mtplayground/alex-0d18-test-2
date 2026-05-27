@@ -1,0 +1,22 @@
+Architecture plan
+
+Issue #1: Initialize Vite + React + TypeScript project
+
+Module structure and file organization:
+- Create a standard Vite React TypeScript app at the repository root.
+- Keep the browser entry in `src/main.tsx`, mounting a root `App` component from `src/App.tsx`.
+- Keep global styles in `src/index.css` and component-level styles in `src/App.css` if the initial template needs them.
+- Use `index.html` as the single Vite HTML entry point.
+- Keep build and compiler configuration at the root: `package.json`, `vite.config.ts`, `tsconfig.json`, `tsconfig.app.json`, and `tsconfig.node.json`.
+
+Shared types:
+- No shared domain types are needed for the initial skeleton.
+- If later issues add application state or API boundaries, introduce shared types under `src/types/` or colocate small component-specific types with their component.
+
+Dependencies between issues:
+- Issue #1 is the foundation for all future frontend work. Later issues should build on the Vite project layout, package scripts, and TypeScript config created here.
+
+Key design decisions:
+- Use Vite's React TypeScript conventions to minimize custom setup and keep future maintenance predictable.
+- Keep the initial app minimal, with only the files needed to run, typecheck, and build.
+- Prefer root-level npm scripts for development, build, lint/typecheck if configured, and preview.
