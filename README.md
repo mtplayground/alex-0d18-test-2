@@ -24,10 +24,14 @@ The dev server listens on `0.0.0.0:8080`.
 npm run build
 ```
 
-## Preview
+The build script removes any existing `dist/` directory, type-checks the app, and writes a fresh production bundle to `dist/`.
+
+## Serve Production Build
 
 ```bash
-npm run preview
+npm run serve
 ```
 
-The preview server also listens on `0.0.0.0:8080`.
+This serves the built `dist/` directory with Vite preview on `0.0.0.0:8080`. Run `npm run build` first so the static files exist.
+
+`npm run preview` is kept as an alias for the same production static server.
