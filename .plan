@@ -4,34 +4,43 @@ Project shape:
 - Vite + React + TypeScript single-page clock app with analog and digital displays.
 - Runtime code lives under `src/`, with app composition in `src/main.tsx`.
 - Shared pure helpers and API clients live under `src/lib/`.
+- React stateful feature hooks live under `src/hooks/`.
 - Unit coverage uses Vitest under `src/**/*.test.ts(x)`; browser coverage uses Playwright under `e2e/`.
 
 Module structure and file organization:
-- `src/main.tsx`: app composition, shared ticking `Date` state, clock layout, and hour-format toggle wiring.
+- `src/main.tsx`: app composition, shared ticking `Date` state, clock layout, hour-format toggle wiring, and planned weather panel integration.
 - `src/components/AnalogClock.tsx`: presentational SVG analog clock.
 - `src/components/Clock.tsx`: digital clock display from a shared `date` prop.
 - `src/components/FormatToggle.tsx`: controlled 12h/24h toggle.
+- `src/components/WeatherPanel.tsx`: planned compact weather display component for Issue #39.
 - `src/hooks/useHourFormat.ts`: persisted hour-format preference.
+- `src/hooks/useWeather.ts`: planned Issue #38 hook for geolocation, fallback coordinates, periodic refresh, and `{ data, loading, error }` state.
 - `src/lib/formatTime.ts`: pure digital time formatter.
 - `src/lib/getHandAngles.ts`: pure analog hand-angle calculator.
-- `src/lib/weather.ts`: planned Issue #35 client module for OpenWeatherMap Current Weather API.
-- `src/lib/weather.test.ts`: planned Vitest coverage using mocked `fetch` responses and failures.
+- `src/lib/weather.ts`: OpenWeatherMap Current Weather API client.
+- `src/lib/weather.test.ts`: existing weather client tests, to be checked/expanded by Issue #37 against the requested mocked fetch scenarios.
+- `.env.example`: should document `VITE_OPENWEATHERMAP_API_KEY` when Issue #40 integrates the panel.
+- `e2e/clock.spec.ts`: existing Playwright coverage, to be extended by Issue #41 with mocked weather API behavior.
 
 Shared types and contracts:
 - `fetchWeather(lat: number, lon: number, apiKey: string): Promise<WeatherData>`.
-- `WeatherData` should expose the normalized app-facing fields: `city`, `temperature`, `description`, and `feelsLike`.
-- Keep OpenWeatherMap's raw response type internal to `src/lib/weather.ts`.
-- Validate HTTP status and response shape before returning normalized data.
-- Handle network failures, invalid API keys, rate limits, and malformed responses with a predictable error type or message.
+- `WeatherData`: `{ city: string; temperature: number; description: string; feelsLike: number }`.
+- `WeatherApiError` exposes typed weather failure codes for invalid key, rate limit, network failure, HTTP failure, and invalid response.
+- `useWeather(apiKey: string)` should expose `{ data: WeatherData | null, loading: boolean, error: string | null }` or an equivalent stable object shape.
+- Default fallback location is London coordinates when browser geolocation is denied or unavailable.
+- `WeatherPanel` should stay presentational around the hook result and not read environment variables directly.
 
 Issue dependencies:
-- Current implementation scope is only Issue #35: Create weather API client.
-- No UI, routing, database, persistence, or deployment changes are required for this issue.
-- Future weather UI can consume the client after this module exists.
+- #37 depends on the merged weather API client and should verify mocked success, network error, 401, and 429 cases.
+- #38 depends on `fetchWeather`; implement the browser geolocation hook and 10-minute refresh cadence.
+- #39 depends on `useWeather`; build the Tailwind-styled panel with loading, data, and error states.
+- #40 depends on `WeatherPanel`; read `import.meta.env.VITE_OPENWEATHERMAP_API_KEY`, document it in `.env.example`, and render the panel only when configured.
+- #41 depends on #40; extend Playwright with API mocking and configured test env so no real weather network call or real API key is needed.
 
 Key design decisions:
-- Isolate the OpenWeatherMap URL construction and response normalization in one lib module.
-- Use `URL`/`URLSearchParams` rather than ad hoc string concatenation for query parameters.
-- Do not hardcode API keys; `apiKey` is passed into `fetchWeather`.
-- Prefer typed, testable error handling over leaking raw `fetch` or provider errors to callers.
-- Mock `globalThis.fetch` in tests so unit coverage does not depend on network access or a real API key.
+- Keep API keys out of source code; pass the Vite env value down from app composition.
+- Keep weather fetching isolated from UI so hook/component tests can mock `fetchWeather` or `fetch`.
+- Do not add database or persistent server state; weather state is transient client state.
+- Use browser geolocation only from the hook, with cleanup for intervals and stale async calls.
+- Prefer compact UI below the digital clock so the existing analog/digital clock remains the primary visual hierarchy.
+- E2E weather coverage should mock the OpenWeatherMap request and avoid relying on external network, user location, or a real key.
