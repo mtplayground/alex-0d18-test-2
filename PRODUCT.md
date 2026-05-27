@@ -19,6 +19,7 @@
 - `src/components/FormatToggle.tsx` is a controlled UI component.
 - `src/hooks/useHourFormat.ts` owns localStorage read/write behavior and guards against unavailable storage.
 - `src/lib/formatTime.ts` is the pure time-formatting boundary shared by UI and tests.
+- `src/lib/getHandAngles.ts` is a pure analog-clock helper returning hour, minute, and second hand rotation degrees from a `Date`.
 - Tailwind is configured through `tailwind.config.js`, `postcss.config.js`, and `src/index.css`.
 - `vite.config.ts` keeps dev and preview servers on `0.0.0.0:8080`; preview allows `.sprites.app` hosts for Sprite deployments.
 - Playwright E2E configuration lives in `playwright.config.ts`, with specs under `e2e/`.
@@ -27,6 +28,7 @@
 
 - `npm run test` runs Vitest tests under `src`.
 - `src/lib/formatTime.test.ts` covers formatting boundaries.
+- `src/lib/getHandAngles.test.ts` covers midnight/noon, exact hand positions, smooth hour and minute movement, and late-night wrap boundaries.
 - `src/hooks/useHourFormat.test.ts` covers default, read, write, and toggle persistence behavior with mocked localStorage.
 - `npm run test:e2e` builds the production bundle, serves `dist/` with Vite preview, and runs the Playwright Chromium test for clock rendering, toggle switching, and reload persistence.
 
