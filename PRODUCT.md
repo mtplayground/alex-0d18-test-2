@@ -27,12 +27,13 @@
 - `npm run test` runs Vitest tests under `src`.
 - `src/lib/formatTime.test.ts` covers formatting boundaries.
 - `src/hooks/useHourFormat.test.ts` covers default, read, write, and toggle persistence behavior with mocked localStorage.
-- `npm run test:e2e` runs the Playwright Chromium test for clock rendering, toggle switching, and reload persistence.
+- `npm run test:e2e` builds the production bundle, serves `dist/` with Vite preview, and runs the Playwright Chromium test for clock rendering, toggle switching, and reload persistence.
 
 ## Conventions
 
 - `npm run dev` starts Vite on `0.0.0.0:8080`.
-- `npm run build` runs TypeScript build checks and creates the Vite production bundle.
-- `npm run preview` serves the production build on `0.0.0.0:8080`.
+- `npm run build` removes any existing `dist/`, runs TypeScript build checks, and creates a fresh Vite production bundle.
+- `npm run serve` serves the built `dist/` directory on `0.0.0.0:8080`.
+- `npm run preview` is an alias for `npm run serve`.
 - `.env.example` is intentionally empty; no environment variables are required right now.
 - Generated and local-only files stay out of version control, including `node_modules/`, `dist/`, Playwright output, tokens, and local progress metadata.
