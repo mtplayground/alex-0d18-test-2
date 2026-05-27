@@ -4,12 +4,17 @@ import { createRoot } from 'react-dom/client';
 import { AnalogClock } from './components/AnalogClock';
 import { Clock } from './components/Clock';
 import { FormatToggle } from './components/FormatToggle';
+import { WeatherPanel } from './components/WeatherPanel';
 import { useHourFormat } from './hooks/useHourFormat';
+import { useWeather } from './hooks/useWeather';
 import './index.css';
+
+const OPENWEATHERMAP_API_KEY = String(import.meta.env.VITE_OPENWEATHERMAP_API_KEY ?? '').trim();
 
 function App() {
   const [hour12, setHour12] = useHourFormat();
   const [now, setNow] = useState(() => new Date());
+  const weather = useWeather(OPENWEATHERMAP_API_KEY);
 
   useEffect(() => {
     const intervalId = window.setInterval(() => {
@@ -29,6 +34,7 @@ function App() {
         </p>
         <AnalogClock date={now} className="mb-8 max-w-[18rem] sm:max-w-xs" />
         <Clock date={now} hour12={hour12} />
+        {OPENWEATHERMAP_API_KEY ? <WeatherPanel className="mt-6" {...weather} /> : null}
         <p className="mx-auto mt-5 max-w-xl text-lg leading-8 text-slate-300">
           Updated every second.
         </p>
